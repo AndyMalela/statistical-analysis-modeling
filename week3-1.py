@@ -24,5 +24,5 @@ while t < total_t:
 plt.plot(time_points, event_counts, drawstyle='steps-post')
 plt.xlabel('Time')
 plt.ylabel('Event Count')
-plt.title('Poisson Process Simulation (λ=3)')
+plt.title('Poisson Process Simulation (λ=3 h=0.0001)')
 plt.show()
