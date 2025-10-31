@@ -1,0 +1,15 @@
+WEEK 3 NO 2
+
+rate = lambda
+
+scale = 1/lambda = theta = alpha
+
+*larger scale/theta = distribution is stretched
+shape/skew = k = alpha
+
+poisson generates a exponential dist of inter arrival times (alpha=1)
+whatever you lambda is, 1/lambda is your scale (is that our mean?)
+
+we can use the idea of poisson process generating a alpha 1 gamma dist inter-arrival times, 
+
+you generate random inter-arrival times with specific scale. we do this 2000 times. for each one, generate more than 100 numbers but have each times have the same amount. i.e. 2000 samples of 150 numbers.
