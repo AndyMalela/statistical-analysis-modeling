@@ -3,9 +3,14 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from math import sqrt, pi, exp
+from pathlib import Path
+import re
 
-# Helper to display DataFrames nicely in the UI
-from caas_jupyter_tools import display_dataframe_to_user
+def display_dataframe_to_user(title, df):
+    print(title)
+    print(df)
+
+
 
 # Reproducibility
 rng = np.random.default_rng(42)
@@ -18,6 +23,15 @@ params = {
     "Exponential": {"lam": 1.0},            # rate λ; scale = 1/λ
     "Gamma": {"k": 3.0, "theta": 2.0},      # shape k, scale θ
 }
+
+# ---- Utility: output folder + safe file names ----
+OUTDIR = Path("figures")
+OUTDIR.mkdir(parents=True, exist_ok=True)
+
+def slugify(s: str) -> str:
+    s = s.strip().lower()
+    s = re.sub(r"[^a-z0-9]+", "-", s)
+    return s.strip("-") or "figure"
 
 # ---- Utility functions ----
 def freedman_diaconis_bins(x):
@@ -101,8 +115,6 @@ def theoretical_characteristics(name, p):
         }
     if name == "Gamma":
         k, theta = p["k"], p["theta"]
-        # Use log-gamma via scipy.special? We'll implement a stable gamma(k) using numpy for these small params.
-        # For integer/half-integer small k it's easy; here k=3 -> Γ(3)=2!
         from math import gamma as gamma_fn
         def pdf(x):
             x = np.asarray(x)
@@ -181,7 +193,11 @@ def plot_dist(name, x, theo):
     plt.xlabel("x")
     plt.ylabel("Density")
     plt.legend()
-    plt.show()
+
+    # --- NEW: save as SVG instead of (or in addition to) showing ---
+    fname = OUTDIR / f"{slugify(name)}.svg"
+    plt.savefig(fname, format="svg", bbox_inches="tight")
+    plt.close()  # free memory
 
 for name, x in samples.items():
     theo = theoretical_characteristics(name, params[name])

@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib; matplotlib.use('Agg')  # force non-interactive backend
 from scipy.special import erfinv
 
 def generate_wiener_process_3d(sigma, mu, num_steps, dt):
@@ -42,4 +43,5 @@ ax.set_title(f'3D Wiener Processes (T={total_time:.2f}, μ={mu})')
 # The total time is 10 seconds, not 1000. 1000 steps, but each step is only 0.01 time units, so the total duration is 10 time units.
 ax.legend()
 ax.grid(True)
+plt.savefig("wiener-process-viz.svg", format="svg", bbox_inches="tight")
 plt.show()
