@@ -1,6 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+#if 99.7% of points of a standard Wiener process W(t) lie within the cone defined by y=3√t and y=-3√t for t in [0,T], it follows a normal distribution with mean 0 and variance t at each time t.
+
 # ----- parameters -----
 np.random.seed(42)
 n_paths = 2000
@@ -34,31 +36,20 @@ print(f"Percentage of ALL simulated points inside the cone: {percent_all_points:
 print(f"Average per-time percentage (t>0): {avg_per_t_percent_excl0:.3f}%")
 print(f'3-sigma check via Z = W_t/√t (t>0): {percent_3sigma_check:.3f}% (theory ≈ 99.7%)')
 
-# ----- visualization -----
+# ----- visualization (thicker paths) -----
 plt.figure(figsize=(10, 6))
-# Plot a subset for clarity; set n_show=n_paths and reduce alpha if you want all
-n_show = 200
-plt.plot(t, W[:n_show, :].T, color='tab:blue', alpha=0.08, lw=1)
 
-plt.plot(t, upper, 'r--', lw=2, label=r'$y_1(t)=3\sqrt{t}$')
-plt.plot(t, lower, 'r--', lw=2, label=r'$y_2(t)=-3\sqrt{t}$')
+n_show = 200  # still plot a subset for clarity
+plt.plot(t, W[:n_show, :].T, color='tab:blue', alpha=0.15, lw=1.5)  # thicker + slightly more opaque
+
+# boundary lines
+plt.plot(t, upper, 'r--', lw=2.5, label=r'$y_1(t)=3\sqrt{t}$')
+plt.plot(t, lower, 'r--', lw=2.5, label=r'$y_2(t)=-3\sqrt{t}$')
 
 plt.title(f'{n_paths} Wiener paths on [0, {T}] with 3√t cone')
 plt.xlabel('t')
 plt.ylabel('W(t)')
 plt.legend(loc='upper left')
-plt.grid(alpha=0.25)
-plt.tight_layout()
-plt.show()
-
-# ----- (optional) visualize per-time coverage -----
-plt.figure(figsize=(9, 4))
-plt.plot(t, per_t_percent, lw=2)
-plt.axhline(99.7, color='r', ls='--', label='three-sigma ≈ 99.7%')
-plt.title('Percentage of points inside the cone at each time t')
-plt.xlabel('t')
-plt.ylabel('% inside cone')
-plt.legend()
 plt.grid(alpha=0.25)
 plt.tight_layout()
 plt.show()

@@ -99,30 +99,53 @@ def running_mean_ci(x, alpha=0.05):
     return n, mean, lo, hi
 
 
-def example_plot(rng):
-    """Make a single example trajectory plot for three hikers."""
+def example_plot(rng, save_path: Path | None = None):
+    """Make a single example trajectory plot for three hikers (readable when small)."""
     example_results = []
     for _ in range(3):
         hiker_rng = np.random.default_rng(rng.integers(0, 2**63 - 1))
         x_path, y_path, steps = simulate_walk(rng=hiker_rng)
         example_results.append((x_path, y_path, steps))
 
-    fig, ax = plt.subplots(figsize=(7, 7))
+    # Constrained layout helps once we push legend outside
+    fig, ax = plt.subplots(figsize=(7, 7), constrained_layout=True)
+
     colors = ['#1f77b4', '#ff7f0e', '#2ca02c']
     for i, (x_path, y_path, steps) in enumerate(example_results, start=1):
-        ax.plot(x_path, y_path, color=colors[i-1], linewidth=0.8, alpha=0.6,
+        ax.plot(x_path, y_path,
+                color=colors[i-1], linewidth=1.6, alpha=0.72,
                 label=f"Hiker {i} ({steps:,} steps)")
-        ax.scatter(x_path[-1], y_path[-1], color=colors[i-1], edgecolor='black',
-                   s=25, zorder=5)
-    ax.scatter(0, 0, color='black', s=30, label='Start', zorder=6)
+        ax.scatter(x_path[-1], y_path[-1],
+                   color=colors[i-1], edgecolor='black',
+                   s=42, zorder=5)
+
+    # Start point
+    ax.scatter(0, 0, color='black', s=48, label='Start', zorder=6)
+
+    # Boundary circle
     theta = np.linspace(0, 2*np.pi, 600)
     ax.plot(RADIUS_METERS*np.cos(theta), RADIUS_METERS*np.sin(theta),
-            linestyle='--', linewidth=0.8, color='gray',
+            linestyle='--', linewidth=1.2, color='gray',
             label='Help boundary (1000 m)')
+
+    # Keep geometry correct but leave data scale free
     ax.set_aspect('equal', adjustable='box')
-    ax.set_xlabel('x (m)'); ax.set_ylabel('y (m)')
+    ax.set_xlabel('x (m)')
+    ax.set_ylabel('y (m)')
     ax.set_title('2D Random Walks — Example Single Simulation')
-    ax.legend(loc='best')
+    ax.grid(True, alpha=0.3, linestyle=':')
+
+    # Slight margins so endpoints aren’t flush to the frame
+    ax.margins(0.05)
+
+    # Legend outside so labels don’t crowd the paths
+    ax.legend(loc='best', bbox_to_anchor=(1.02, 0.5),
+              borderaxespad=0., frameon=False)
+
+    # Optional: save crisp when exported small
+    if save_path is not None:
+        fig.savefig(save_path, dpi=200, bbox_inches="tight")
+
     plt.show()
 
 

@@ -175,29 +175,44 @@ display_dataframe_to_user("Sample vs. true statistics (N=1000)", results_df.roun
 # ---- Visualization ----
 def plot_dist(name, x, theo):
     plt.figure()
-    # Histogram with density
-    plt.hist(x, bins=freedman_diaconis_bins(x), density=True, alpha=0.5, label="Sample (hist)")
-    # Theoretical pdf curve
+    bins = freedman_diaconis_bins(x)
+    plt.hist(x, bins=bins, density=True, alpha=0.5, label="Sample (hist)")
+
+    # Theoretical PDF curve
     xs = np.linspace(min(x.min(), -5), max(x.max(), 5), 500)
     try:
         ys = theo["pdf"](xs)
         plt.plot(xs, ys, label="Theoretical PDF")
     except Exception:
         pass
-    # Vertical lines for means/modes
-    plt.axvline(x.mean(), linestyle="--", label="Sample mean")
-    plt.axvline(theo["true_mean"], linestyle=":", label="True mean")
+
+    # Compute sample statistics
+    sample_mean = np.mean(x)
+    sample_mode = sample_mode_hist(x)
+    ci_low, ci_high = mean_confint(x)
+    
+    # Draw vertical lines with numeric labels
+    plt.axvline(sample_mean, linestyle="--", label=f"Sample mean = {sample_mean:.3f}")
+    plt.axvline(theo["true_mean"], linestyle=":", label=f"True mean = {theo['true_mean']:.3f}")
     if np.isfinite(theo["true_mode"]):
-        plt.axvline(theo["true_mode"], linestyle="-.", label="True mode")
-    plt.title(f"{name}: N={len(x)}")
+        plt.axvline(theo["true_mode"], linestyle="-.", label=f"True mode = {theo['true_mode']:.3f}")
+
+    # Title includes skewness info too
+    skew, ex_kurt = sample_skewness_kurtosis(x)
+    plt.title(
+        f"{name}: N={len(x)}\n"
+        f"Skew={skew:.2f}, Kurtosis={ex_kurt:.2f}, "
+        f"95% CI=({ci_low:.2f}, {ci_high:.2f})"
+    )
+
     plt.xlabel("x")
     plt.ylabel("Density")
     plt.legend()
 
-    # --- NEW: save as SVG instead of (or in addition to) showing ---
     fname = OUTDIR / f"{slugify(name)}.svg"
     plt.savefig(fname, format="svg", bbox_inches="tight")
-    plt.close()  # free memory
+    plt.close()
+
 
 for name, x in samples.items():
     theo = theoretical_characteristics(name, params[name])

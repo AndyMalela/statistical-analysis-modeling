@@ -1,0 +1,88 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy import stats
+import math
+
+# ---- config (match your experiment) ----
+SEED = 1337
+N = 37
+ALPHA = 0.05
+B = 4000
+
+MU_NORMAL = 12.5
+SIGMA_NORMAL = 2.0
+LAMBDA_EXP = 0.08
+C = 12.5  # hypothesized mean for both tasks
+
+rng = np.random.default_rng(SEED)
+
+def draw_sample(model, n, rng):
+    if model == "normal":
+        return rng.normal(loc=MU_NORMAL, scale=SIGMA_NORMAL, size=n)
+    elif model == "exp":
+        return rng.exponential(scale=1.0 / LAMBDA_EXP, size=n)
+    else:
+        raise ValueError("model must be 'normal' or 'exp'")
+
+def t_stat(x, c):
+    n = len(x)
+    xbar = np.mean(x)
+    s = np.std(x, ddof=1)
+    return (xbar - c) / (s / math.sqrt(n))
+
+def bootstrap_t_distribution(x, c, B, rng):
+    n = len(x)
+    xbar = np.mean(x)
+    t_y = np.empty(B, dtype=float)
+    for b in range(B):
+        y = rng.choice(x, size=n, replace=True)
+        sY = np.std(y, ddof=1)
+        if sY == 0:
+            t_y[b] = 0.0
+        else:
+            t_y[b] = (np.mean(y) - xbar) / (sY / math.sqrt(n))
+    return t_y
+
+def panel_for_sample(ax, x, title):
+    # observed t_X
+    tX = t_stat(x, C)
+
+    # bootstrap null of t_Y (centered at 0 under H0)
+    tY = bootstrap_t_distribution(x, C, B, rng)
+
+    # bootstrap p-value: how often |t_Y| > |t_X|
+    A = np.sum(np.abs(tY) > abs(tX))
+    p_boot = (A + 1.0) / (B + 1.0)
+
+    # classical critical values
+    df = len(x) - 1
+    tcrit = stats.t.ppf(1 - ALPHA/2, df)
+
+    # plot
+    ax.hist(tY, bins=40)
+    ax.axvline(tX, linestyle="--", linewidth=2)
+    ax.axvline(-tcrit, linestyle=":")
+    ax.axvline(tcrit, linestyle=":")
+    ax.set_title(title)
+    ax.set_xlabel("Bootstrap $t_Y$")
+    ax.set_ylabel("Count")
+
+    # annotation
+    ax.text(0.02, 0.95, f"t_X = {tX:.3f}\n±t_crit = {tcrit:.3f}\np_boot = {p_boot:.3f}",
+            transform=ax.transAxes, va="top")
+
+    return {"tX": tX, "tcrit": tcrit, "p_boot": p_boot}
+
+# ---- build the figure for both distributions ----
+x_norm = draw_sample("normal", N, rng)
+x_exp  = draw_sample("exp", N, rng)
+
+fig, axes = plt.subplots(1, 2, figsize=(12, 4), constrained_layout=True)
+res_norm = panel_for_sample(axes[0], x_norm, "Bootstrap null for t (Normal sample)")
+res_exp  = panel_for_sample(axes[1], x_exp,  "Bootstrap null for t (Exponential sample)")
+
+plt.suptitle(f"Bootstrap t-null vs observed t and classical cutoffs (N={N}, B={B}, alpha={ALPHA})")
+plt.show()
+
+print("Normal:", res_norm)
+print("Exponential:", res_exp)

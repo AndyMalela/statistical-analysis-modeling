@@ -7,13 +7,11 @@ lambda_val = 2
 total_t = 100
 h = 0.0001
 
-# Initialization
 t = 0
 N = 0
 time_points = []
 event_counts = []
 
-# Simulation
 while t < total_t:
     if np.random.rand() < lambda_val * h:
         N += 1
